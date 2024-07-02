@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pong Game </title>
+  <style>
+    @import url(https://fonts.googleapis.com/css?family=Pacifico);
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      font-family: "Pacifico", cursive;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      position: fixed;
+      color: #ff0;
+      font-size: 3rem;
+      z-index: 100;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pong</h1>
+  
+  <canvas id="game"></canvas>
+
+ <script src="index.js"></script>
+  <script>
+    
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const XO = W / 2;
+    const YO = H / 2;
+    const NUM_PARTICLES = 400;
+    const MAX_Z = 2;
+    const MAX_R = 1;
+    const Z_SPD = 1;
+    const PARTICLES = [];
+
+    class Particle {
+      constructor(x, y, z) {
+        this.pos = new Vector(x, y, z);
+        const X_VEL = 0, Y_VEL = 0, Z_VEL = -Z_SPD;
+        this.vel = new Vector(X_VEL, Y_VEL, Z_VEL);
+        this.vel.scale(0.005);
+        this.fill = "rgba(255,255,255,0.3)";
+        this.stroke = this.fill;
+      }
+
+      update() {
+        this.pos.add(this.vel);
+      }
+
+      render() {
+        const PIXEL = to2d(this.pos),
+          X = PIXEL[0],
+          Y = PIXEL[1],
+          R = (MAX_Z - this.pos.z) / MAX_Z * MAX_R;
+
+        if (X < 0 || X > W || Y < 0 || Y > H) this.pos.z = MAX_Z;
+
+        this.update();
+        context.beginPath();
+        context.fillStyle = this.fill;
+        context.strokeStyle = this.stroke;
+        context.arc(X, PIXEL[1], R, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.closePath();
+      }
+    }
+
+    class Vector {
+      constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+      }
+
+      add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+      }
+      
+      scale(n) {
+        this.x *= n;
+        this.y *= n;
+        this.z *= n;
+      }
+    }
+
+    function to2d(v) {
+      const X_COORD = v.x - XO,
+        Y_COORD = v.y - YO,
+        PX = X_COORD / v.z,
+        PY = Y_COORD / v.z;
+      return [PX + XO, PY + YO];
+    }
+
+    function renderParticles() {
+      for (let i = 0; i < PARTICLES.length; i++) {
+        PARTICLES[i].render();
+      }
+    }
+
+    function particleLoop() {
+      requestAnimationFrame(particleLoop);
+      context.fillStyle = "rgba(0,0,0,0.15)";
+      context.fillRect(0, 0, W, H);
+      renderParticles();
+    }
+
+    function createParticles() {
+      for (let i = 0; i < NUM_PARTICLES; i++) {
+        const X = Math.random() * W, Y = Math.random() * H, Z = Math.random() * MAX_Z;
+        PARTICLES.push(new Particle(X, Y, Z));
+      }
+    }
+
+    function initParticles() {
+      canvas.width = W;
+      canvas.height = H;
+      createParticles();
+      particleLoop();
+    }
+
+    document.addEventListener('DOMContentLoaded', initParticles);
+  </script>
+      
+
+
+</body>
+</html>
